@@ -1,0 +1,229 @@
+# Project: goco – Automated Receipt & Invoice Collector
+
+## 1. Project Overview
+
+We are developing a lightweight Python-based tool for goco to automate the collection, organization, and storage of receipts and invoices from various online services and SaaS platforms paid for using company credit cards.
+
+The goal is to reduce the manual work required to log into different services, locate invoices, download PDFs, and share them with the people responsible for accounting.
+
+We prefer a simple, maintainable, and cost-effective in-house solution rather than relying immediately on paid invoice management platforms such as GetMyInvoices.
+
+## 2. Business Context
+
+- There are currently two employees responsible for different company credit cards.
+- Each employee pays for a specific group of services.
+- Some services send invoices or receipts automatically by email.
+- Other services require users to log into a billing portal and manually download the documents.
+- Some services may provide APIs that allow automated invoice retrieval.
+- Authorized employees need central access to the collected documents.
+- The system should make it easy to identify which invoices have been collected and which are missing.
+
+The exact assignment of services to cardholders will be configured later.
+
+## 3. Services in Scope
+
+The current list includes:
+
+- Adobe
+- Amazon Web Services (AWS)
+- Anthropic / Claude
+- Atlassian
+- Craft Docs
+- ElevenLabs
+- Figma
+- GitHub
+- GoDaddy
+- Google (Workspace, Ads, Cloud/Gemini)
+- Hostinger
+- HubSpot
+- JetBrains
+- LinkedIn (Ads, Sales Navigator)
+- Make / Celonis
+- Meta / Facebook Ads
+- Microsoft (Azure, 365/Teams, Advertising)
+- netcup
+- ParkRaum-Management PRM
+- PLAUD
+- SonarCloud / SonarQube Cloud
+- Sprinto
+- t3n / Digital Pioneers
+- Voiceflow
+- Webflow
+
+Different products within the same provider may have separate billing systems, accounts, and invoice retrieval methods.
+
+## 4. Proposed Technical Approach
+
+The preferred initial solution is a small Python CLI (Command-Line Interface) application.
+
+A graphical desktop interface is not required for the MVP.
+
+The tool should support multiple invoice collection strategies:
+
+**A. Official APIs**
+
+Use official billing APIs where they support invoice or receipt retrieval.
+
+**B. Email Collection**
+
+Retrieve invoices and receipts from authorized email accounts using supported email APIs or protocols.
+
+**C. Browser Automation**
+
+Where no suitable API or email delivery exists, investigate automated downloads using Playwright.
+
+Browser automation should respect authentication requirements, provider policies, and security controls. Do not attempt to bypass MFA, CAPTCHA, or access restrictions.
+
+**D. Manual Fallback**
+
+If automated retrieval is unavailable or unreliable, allow the system to identify missing invoices for manual collection.
+
+Each service should have its own independent collector or integration module.
+
+## 5. Authentication and Configuration
+
+The system must support two cardholders and multiple service accounts.
+
+We want to keep configuration simple.
+
+Preferred approach:
+
+- YAML or JSON for service configuration and cardholder assignments.
+- Environment variables for non-sensitive settings and references to secrets.
+- Python keyring, operating-system credential storage, or a company-approved secrets manager for authentication secrets.
+- OAuth or scoped API tokens wherever available.
+- Never store real passwords, full credit card numbers, or sensitive tokens in source code or version control.
+
+Service credentials may remain valid for long periods, but the architecture must account for token expiration, MFA, and credential rotation.
+
+## 6. Invoice Storage
+
+Collected documents should be stored in a centralized location accessible to authorized employees.
+
+Potential storage options:
+
+- Google Drive
+- Microsoft OneDrive / SharePoint
+- A company-managed storage server
+
+The final storage provider has not yet been selected.
+
+The system should support:
+
+- Organized storage by vendor and billing period.
+- Original invoice and receipt files, including structured formats where available.
+- Duplicate detection.
+- Invoice metadata such as vendor, date, amount, currency, invoice ID, and assigned cardholder.
+- Logging of downloads, errors, and missing documents.
+- Appropriate access permissions.
+
+A simple local SQLite database or metadata file may be used for tracking, but it should not become the only place where important business records are stored.
+
+## 7. MVP Requirements
+
+The first version should:
+
+1. Load cardholder and service configurations.
+2. Execute selected invoice collectors.
+3. Retrieve available invoices for a specified billing period.
+4. Download and preserve the original documents.
+5. Save the documents in a configured destination.
+6. Detect already collected documents to avoid duplicates.
+7. Show a summary of successful, failed, and manually required collections.
+8. Handle authentication and network errors gracefully.
+
+Possible CLI commands:
+
+- `collect --all`
+- `collect --service aws`
+- `collect --owner person1`
+- `collect --month 2026-10`
+- `status`
+- `list-services`
+
+These commands are proposed examples, not finalized implementation requirements.
+
+## 8. Architecture Principles
+
+- Start small and avoid overengineering.
+- Prefer the Python standard library when practical.
+- Use well-maintained libraries such as `httpx`, `requests`, `keyring`, and `playwright` when needed.
+- Keep vendor-specific integrations independent.
+- Separate collection logic, authentication, configuration, metadata storage, and cloud storage.
+- Make integrations individually testable.
+- Support adding new vendors without modifying the core application.
+- Design for Windows initially, with potential cross-platform support.
+- Allow future scheduled execution without requiring a desktop interface.
+
+## 9. Research Requirements
+
+Before implementing an integration for any service:
+
+1. Check its latest official documentation.
+2. Determine whether invoice emails can be enabled.
+3. Determine whether an official API can retrieve the actual invoice or receipt.
+4. Identify the required authentication method and permissions.
+5. Check whether browser automation is necessary, permitted, and practical.
+6. Identify known limitations and maintenance risks.
+7. Recommend the simplest reliable retrieval approach.
+
+Never assume that a service's general API provides access to billing documents.
+
+Clearly distinguish confirmed functionality from unverified possibilities.
+
+## 10. Development Strategy
+
+We will develop the project incrementally.
+
+**Phase 1 — Research and feasibility**
+
+Investigate the invoice retrieval options for all listed services and classify them by collection method.
+
+**Phase 2 — Architecture and configuration**
+
+Design the CLI structure, cardholder configuration, security model, and collector interfaces.
+
+**Phase 3 — Proof of concept**
+
+Implement a small number of integrations representing different collection strategies.
+
+**Phase 4 — Central storage**
+
+Implement document storage, deduplication, metadata, and reporting.
+
+**Phase 5 — Expand integrations**
+
+Gradually support more services, prioritizing reliable and maintainable solutions.
+
+**Phase 6 — Optional automation**
+
+Evaluate scheduled execution, cloud deployment, and notifications for missing documents.
+
+## 11. How ChatGPT Should Assist
+
+Act as a senior Python software engineer, solution architect, and technical research assistant.
+
+When discussing implementation:
+
+- Evaluate practicality before suggesting complex solutions.
+- Prioritize maintainability, security, and simplicity.
+- Explain technical trade-offs and alternatives.
+- Provide modular, production-minded Python examples.
+- Help create and review project architecture.
+- Research official vendor documentation when external details are required.
+- Do not invent APIs, endpoints, authentication capabilities, or invoice download support.
+- Highlight uncertainty and technical blockers.
+- Distinguish MVP functionality from optional future improvements.
+- Avoid unnecessary cloud infrastructure, databases, and frameworks.
+
+The main objective is to build the smallest reliable solution that solves the business problem rather than creating an unnecessarily complex application.
+
+## 12. Current Project Status
+
+The project is currently in the research and planning stage.
+
+No final architecture, storage provider, or credential management strategy has been selected.
+
+The current preferred direction is a modular Python CLI tool with API, email, and potentially browser-based invoice collection.
+
+The next major task is to investigate the supported collection methods for all services and determine the realistic scope of the MVP.

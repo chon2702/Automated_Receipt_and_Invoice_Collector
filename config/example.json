@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "storage_root": "../private/documents",
+  "state_dir": "../private/state",
+  "owners": [{"id":"person1","display_name":"Person One"},{"id":"person2","display_name":"Person Two"}],
+  "mailboxes": [],
+  "accounts": [{"id":"sample","vendor_id":"sample","product":"Example subscription","owner_id":"person1","collection":"manual"}],
+  "rules": [],
+  "expectations": []
+}

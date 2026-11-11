@@ -1,0 +1,1 @@
+"""goco automated invoice collector."""

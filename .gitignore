@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+tmp/
+.superpowers/
+private/
+data/
+state/
+config/*.json
+!config/example.json
+credentials*.json
+token*.json
+/docs/company-context.md

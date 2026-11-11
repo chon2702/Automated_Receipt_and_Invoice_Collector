@@ -11,8 +11,8 @@ def rule(account='a'):
 
 
 def test_nested_mime_preserves_original_and_unknown_metadata():
-    from goco.mail.mime import normalize_message, extract_candidates
-    from goco.vendors.rules import match_rules
+    from goco.models.integrations.mail.mime import normalize_message, extract_candidates
+    from goco.models.integrations.vendors.rules import match_rules
     msg=normalize_message(message())
     decision=match_rules(msg,[rule()])
     candidates=extract_candidates(msg,decision,lambda *_: pytest.fail('inline attachment should not need a fetch'),{'a':{'id':'a','vendor_id':'vendor','owner_id':'person1'}},'mail')
@@ -22,15 +22,15 @@ def test_nested_mime_preserves_original_and_unknown_metadata():
 
 
 def test_ambiguous_account_matching_never_guesses():
-    from goco.mail.mime import normalize_message
-    from goco.vendors.rules import match_rules
+    from goco.models.integrations.mail.mime import normalize_message
+    from goco.models.integrations.vendors.rules import match_rules
     decision=match_rules(normalize_message(message()),[rule(),rule('b')])
     assert decision.reason=='ambiguous_account' and not decision.rules
 
 
 def test_bad_base64_and_oversize_rejected_before_fetch():
-    from goco.mail.mime import normalize_message, extract_candidates
-    from goco.vendors.rules import match_rules
+    from goco.models.integrations.mail.mime import normalize_message, extract_candidates
+    from goco.models.integrations.vendors.rules import match_rules
     raw=message();raw['payload']['parts'][0]['parts'][0]['body']['data']='!!!!'
     msg=normalize_message(raw)
     with pytest.raises(ValueError): extract_candidates(msg,match_rules(msg,[rule()]),lambda *_:b'',{'a':{'id':'a','vendor_id':'vendor','owner_id':'person1'}},'mail')

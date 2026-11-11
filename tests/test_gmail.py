@@ -19,7 +19,7 @@ class Session:
 
 
 def test_pagination_metadata_and_timeouts():
-    from goco.mail.gmail import GmailClient
+    from goco.models.integrations.mail.gmail import GmailClient
     session=Session([Response({'emailAddress':'finance@example.test'}),Response({'messages':[{'id':'one'}],'nextPageToken':'p2'}),Response({'messages':[{'id':'two'}]}),Response({'id':'one','internalDate':'0','payload':{'headers':[]}})])
     client=GmailClient('secret','finance@example.test',session=session,sleep=lambda _:None)
     first=client.list_messages('after:1 before:2')
@@ -32,15 +32,15 @@ def test_pagination_metadata_and_timeouts():
 
 
 def test_identity_mismatch_and_auth_errors_are_safe():
-    from goco.mail.gmail import GmailClient
-    from goco.auth import AuthRequired
+    from goco.models.integrations.mail.gmail import GmailClient
+    from goco.models.integrations.mail.auth import AuthRequired
     with pytest.raises(AuthRequired): GmailClient('secret','finance@example.test',session=Session([Response({'emailAddress':'other@example.test'})]))
     with pytest.raises(AuthRequired) as error: GmailClient('secret','finance@example.test',session=Session([Response({'secret':'TOKEN'},401)]))
     assert 'TOKEN' not in str(error.value)
 
 
 def test_three_attempts_and_capped_retry_after():
-    from goco.mail.gmail import GmailClient, TransportError
+    from goco.models.integrations.mail.gmail import GmailClient, TransportError
     delays=[]
     session=Session([Response({'error':{}},429,{'Retry-After':'999'}),ConnectionError('secret'),Response({'error':{}},503)])
     with pytest.raises(TransportError) as error: GmailClient('secret','finance@example.test',session=session,sleep=delays.append)

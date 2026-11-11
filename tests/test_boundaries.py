@@ -11,16 +11,16 @@ from goco.models import CollectRequest,InvoiceMetadata,parse_month
 
 @pytest.mark.parametrize('field,value', [('owner_id',[]),('product',False),('collection',{}),('vendor_id',False)])
 def test_config_rejects_wrong_types_as_input_errors(config_file,field,value):
-    from goco.config import load_config,ConfigError
+    from goco.models.accounts.config import load_config,ConfigError
     data=json.loads(config_file.read_text());data['accounts'][0][field]=value
     config_file.write_text(json.dumps(data))
     with pytest.raises(ConfigError): load_config(config_file)
 
 
 def test_unknown_metadata_prevents_false_missing(tmp_path):
-    from goco.storage import DocumentStore
-    from goco.index import Index
-    from goco.expectations import evaluate
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
+    from goco.models.reporting.expectations import evaluate
     store=DocumentStore(tmp_path/'docs',Index(tmp_path/'index.sqlite3'))
     store.ingest(candidate())
     coverage=[dict(account_id='a',start='2026-11-01',end='2026-12-01',success=True,completed_at='2026-12-02T00:00:00+00:00')]
@@ -28,8 +28,8 @@ def test_unknown_metadata_prevents_false_missing(tmp_path):
 
 
 def test_verification_conflicts_do_not_mutate_existing_docs(tmp_path):
-    from goco.storage import DocumentStore
-    from goco.index import Index
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
     store=DocumentStore(tmp_path/'docs',Index(tmp_path/'index.sqlite3'))
     first=store.ingest(candidate(invoice_id='INV-1'))
     second=store.ingest(candidate(content=b'%PDF-1.7 other',invoice_id='INV-2'))
@@ -41,9 +41,9 @@ def test_verification_conflicts_do_not_mutate_existing_docs(tmp_path):
 
 
 def test_annual_expectation_selection_and_receipt_not_invoice(tmp_path):
-    from goco.expectations import select_expectations,evaluate
-    from goco.storage import DocumentStore
-    from goco.index import Index
+    from goco.models.reporting.expectations import select_expectations,evaluate
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
     annual=obligation()|dict(period_start='2026-01-16',period_end='2027-01-15')
     assert select_expectations([annual],'2027-02')==[]
     assert len(select_expectations([annual],'2026-07'))==1
@@ -53,9 +53,9 @@ def test_annual_expectation_selection_and_receipt_not_invoice(tmp_path):
 
 
 def test_month_boundary_and_multipage_collection(config_file):
-    from goco.runner import Runner
-    from goco.storage import DocumentStore
-    from goco.index import Index
+    from goco.controller.runner import Runner
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
     cfg=gmail_config(config_file)
     window=parse_month('2026-10')
     class Paged(Client):
@@ -72,9 +72,9 @@ def test_month_boundary_and_multipage_collection(config_file):
 
 
 def test_link_only_and_disabled_rules_visible(config_file):
-    from goco.runner import Runner
-    from goco.storage import DocumentStore
-    from goco.index import Index
+    from goco.controller.runner import Runner
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
     cfg=gmail_config(config_file)
     class Link(Client):
         def get_message(self,*args,**kwargs):
@@ -83,15 +83,15 @@ def test_link_only_and_disabled_rules_visible(config_file):
     result=Runner(cfg,{'mail':Link()},store).collect(CollectRequest('2026-10',('a',)))
     assert result.counts=={'manual_required':1} and not result.coverage[0]['success']
     data=json.loads(config_file.read_text());data['rules'][0]['enabled']=False
-    config_file.write_text(json.dumps(data));from goco.config import load_config
+    config_file.write_text(json.dumps(data));from goco.models.accounts.config import load_config
     result=Runner(load_config(config_file),{},store).collect(CollectRequest('2026-10',('a',)))
     assert result.counts=={'manual_required':1}
 
 
 def test_interrupt_retains_published_original_and_report(config_file):
-    from goco.runner import Runner
-    from goco.storage import DocumentStore,read_runs
-    from goco.index import Index
+    from goco.controller.runner import Runner
+    from goco.models.persistence.storage import DocumentStore,read_runs
+    from goco.models.persistence.index import Index
     cfg=gmail_config(config_file)
     class Interrupted(Client):
         def list_messages(self,query,page_token=None): return {'messages':[{'id':'good'},{'id':'interrupted'}]}
@@ -106,9 +106,9 @@ def test_interrupt_retains_published_original_and_report(config_file):
 
 
 def test_sidecar_update_failure_keeps_previous_record(tmp_path,monkeypatch):
-    from goco.storage import DocumentStore
-    from goco.index import Index
-    import goco.storage as module
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
+    import goco.models.persistence.storage as module
     store=DocumentStore(tmp_path/'docs',Index(tmp_path/'index.sqlite3'))
     store.ingest(candidate())
     def fail(*args): raise OSError('no room')
@@ -118,8 +118,8 @@ def test_sidecar_update_failure_keeps_previous_record(tmp_path,monkeypatch):
 
 
 def test_new_collector_registered_without_runner_changes(monkeypatch):
-    from goco.vendors import load_collectors
-    import goco.vendors as module
+    from goco.models.integrations.vendors import load_collectors
+    import goco.models.integrations.vendors as module
     class Entry:
         name='additional'
         def load(self): return lambda: 'working'
@@ -128,9 +128,9 @@ def test_new_collector_registered_without_runner_changes(monkeypatch):
 
 
 def test_cli_partial_failure_is_exit_one(config_file,capsys,monkeypatch):
-    from goco.cli import main
-    import goco.runner as module
-    from goco.auth import AuthRequired
+    from goco.view.cli import main
+    import goco.controller.runner as module
+    from goco.models.integrations.mail.auth import AuthRequired
     gmail_config(config_file)
     def denied(*args,**kwargs): raise AuthRequired('login_required')
     monkeypatch.setattr(module,'make_client',denied)

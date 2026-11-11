@@ -11,8 +11,8 @@ def candidate(account='a', content=b'%PDF-1.7 original', invoice_id=None, source
 
 
 def test_same_bytes_same_account_duplicate_other_account_separate(tmp_path):
-    from goco.storage import DocumentStore
-    from goco.index import Index
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
     store = DocumentStore(tmp_path/'docs', Index(tmp_path/'state'/'index.sqlite3'))
     first = store.ingest(candidate())
     again = store.ingest(candidate(source='two'))
@@ -29,8 +29,8 @@ def test_same_bytes_same_account_duplicate_other_account_separate(tmp_path):
 
 
 def test_changed_invoice_id_content_preserves_versions(tmp_path):
-    from goco.storage import DocumentStore
-    from goco.index import Index
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
     store = DocumentStore(tmp_path/'docs', Index(tmp_path/'index.sqlite3'))
     a = store.ingest(candidate(invoice_id='INV-1'))
     b = store.ingest(candidate(content=b'%PDF-1.7 corrected', invoice_id='INV-1'))
@@ -41,8 +41,8 @@ def test_changed_invoice_id_content_preserves_versions(tmp_path):
 
 @pytest.mark.parametrize('content,extension', [(b'not pdf','.pdf'),(b'<!DOCTYPE x [<!ENTITY x SYSTEM "file:///secret">]><x>&x;</x>','.xml'),(b'', '.pdf')])
 def test_rejects_invalid_original(tmp_path, content, extension):
-    from goco.storage import DocumentStore
-    from goco.index import Index
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
     store = DocumentStore(tmp_path/'docs', Index(tmp_path/'index.sqlite3'))
     with pytest.raises(ValueError):
         store.ingest(replace(candidate(content=content), original_filename='source'+extension))

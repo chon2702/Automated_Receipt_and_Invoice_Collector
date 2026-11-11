@@ -5,7 +5,7 @@ from email import policy
 from email.parser import BytesParser
 import re
 from defusedxml import ElementTree
-from .models import DOCUMENT_TYPES, MAX_BYTES
+from .types import DOCUMENT_TYPES, MAX_BYTES
 
 
 def metadata_valid(metadata):
@@ -49,3 +49,6 @@ def confined(root, relative):
     path = (Path(root)/relative).resolve()
     if not path.is_relative_to(Path(root).resolve()): raise ValueError('unsafe_document_path')
     return path
+
+def expectation_matches(e,account,kind,metadata):
+    return e['account_id']==account and e['required_type']==kind and metadata.get('verified') and metadata.get('period_start')==e['period_start'] and metadata.get('period_end')==e['period_end']

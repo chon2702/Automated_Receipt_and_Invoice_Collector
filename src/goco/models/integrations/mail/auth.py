@@ -68,7 +68,7 @@ def login(mailbox,secrets):
         credentials=flow.run_local_server(host='127.0.0.1',port=0,open_browser=True,timeout_seconds=180,
             access_type='offline',prompt='consent',login_hint=mailbox['address'],authorization_prompt_message='Complete Gmail consent in your browser.')
         if not credentials.refresh_token: raise AuthRequired('offline_consent_required')
-        from .mail.gmail import GmailClient
+        from .gmail import GmailClient
         GmailClient(credentials.token,mailbox['address'])
         secrets.put(mailbox['secret_ref'],json.loads(credentials.to_json()))
     except AuthRequired: raise
@@ -76,6 +76,6 @@ def login(mailbox,secrets):
 
 
 def make_client(mailbox,dry_run=False):
-    from .mail.gmail import GmailClient
+    from .gmail import GmailClient
     credentials=ensure_credentials(mailbox,CredentialStore(),allow_refresh=not dry_run)
     return GmailClient(credentials.token,mailbox['address'])

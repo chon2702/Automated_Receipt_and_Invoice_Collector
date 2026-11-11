@@ -5,7 +5,7 @@ from dataclasses import asdict
 from pathlib import Path
 import sqlite3
 import uuid
-from .models import StoredDocument
+from goco.models import StoredDocument
 
 
 class Index:
@@ -44,7 +44,7 @@ class Index:
             return [json.loads(row[0]) for row in db.execute('SELECT body FROM runs')]
 
     def rebuild(self, root):
-        from .storage import read_documents, read_runs
+        from goco.models.persistence.storage import read_documents, read_runs
         documents=read_documents(Path(root))
         runs=read_runs(Path(root))
         self.path.parent.mkdir(parents=True, exist_ok=True)

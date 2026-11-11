@@ -10,7 +10,7 @@ def obligation():
 
 
 def test_pending_missing_unknown_and_failed_coverage(tmp_path):
-    from goco.expectations import evaluate
+    from goco.models.reporting.expectations import evaluate
     e=obligation()
     assert evaluate([e], [], date(2026,11,7), [])[0]['status']=='pending'
     assert evaluate([e], [], date(2026,11,8), [])[0]['status']=='unknown'
@@ -24,9 +24,9 @@ def test_pending_missing_unknown_and_failed_coverage(tmp_path):
 
 
 def test_verify_gmail_document_satisfies_expectation(tmp_path):
-    from goco.storage import DocumentStore
-    from goco.index import Index
-    from goco.expectations import evaluate
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
+    from goco.models.reporting.expectations import evaluate
     store=DocumentStore(tmp_path/'docs', Index(tmp_path/'state'/'index.sqlite3'))
     first=store.ingest(candidate())
     before=store.documents()[0]
@@ -40,8 +40,8 @@ def test_verify_gmail_document_satisfies_expectation(tmp_path):
 
 
 def test_source_message_cannot_be_verified_as_invoice(tmp_path):
-    from goco.storage import DocumentStore
-    from goco.index import Index
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
     store=DocumentStore(tmp_path/'docs', Index(tmp_path/'index.sqlite3'))
     source=replace(candidate(content=b'Subject: receipt\r\n\r\nMessage'), document_type='unknown', original_filename='original.eml')
     first=store.ingest(source)

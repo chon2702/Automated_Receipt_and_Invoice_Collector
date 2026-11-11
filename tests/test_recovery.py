@@ -4,8 +4,8 @@ from test_storage import candidate
 
 
 def test_index_failure_after_publish_is_recoverable(tmp_path, monkeypatch):
-    from goco.storage import DocumentStore
-    from goco.index import Index
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
     index = Index(tmp_path/'state'/'index.sqlite3')
     store = DocumentStore(tmp_path/'docs', index)
     original = index.upsert
@@ -20,8 +20,8 @@ def test_index_failure_after_publish_is_recoverable(tmp_path, monkeypatch):
 
 
 def test_corrupt_rebuild_preserves_previous_index(tmp_path):
-    from goco.storage import DocumentStore
-    from goco.index import Index
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
     index = Index(tmp_path/'state'/'index.sqlite3')
     store = DocumentStore(tmp_path/'docs', index)
     first = store.ingest(candidate())
@@ -32,9 +32,9 @@ def test_corrupt_rebuild_preserves_previous_index(tmp_path):
 
 
 def test_interrupted_publication_never_counts_staging(tmp_path, monkeypatch):
-    from goco.storage import DocumentStore
-    from goco.index import Index
-    import goco.storage as storage
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
+    import goco.models.persistence.storage as storage
     store=DocumentStore(tmp_path/'docs', Index(tmp_path/'state'/'index.sqlite3'))
     def stop(stage, final): raise OSError('interrupted rename')
     monkeypatch.setattr(storage, 'publish_directory', stop)
@@ -44,7 +44,7 @@ def test_interrupted_publication_never_counts_staging(tmp_path, monkeypatch):
 
 
 def test_writer_lock_excludes_second_writer_and_releases(tmp_path):
-    from goco.locking import WriterLock
+    from goco.models.persistence.locking import WriterLock
     with WriterLock(tmp_path):
         with pytest.raises(OSError):
             with WriterLock(tmp_path): pass

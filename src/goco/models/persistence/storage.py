@@ -6,9 +6,9 @@ import json
 import os
 import re
 import uuid
-from .models import StoredDocument, CollectionOutcome, MAX_BYTES, utcnow
-from .validation import validate_content, metadata_valid, confined
-from .config import slug
+from goco.models import StoredDocument, CollectionOutcome, MAX_BYTES, utcnow
+from goco.models.documents.validation import validate_content, metadata_valid, confined, expectation_matches
+from goco.models.accounts.config import slug
 
 
 def atomic_json(path, data):
@@ -143,6 +143,3 @@ class DocumentStore:
         atomic_json(original.parent/'metadata.json',asdict(doc));self.index.upsert(doc)
         return CollectionOutcome(doc.account_id,'saved','metadata_verified',doc.document_id)
 
-
-def expectation_matches(e,account,kind,metadata):
-    return e['account_id']==account and e['required_type']==kind and metadata.get('verified') and metadata.get('period_start')==e['period_start'] and metadata.get('period_end')==e['period_end']

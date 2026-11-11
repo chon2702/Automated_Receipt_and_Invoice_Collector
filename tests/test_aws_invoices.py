@@ -3,15 +3,15 @@ import json
 import pytest
 from datetime import datetime, timezone
 
-from goco.config import load_config
-from goco.index import Index
+from goco.models.accounts.config import load_config
+from goco.models.persistence.index import Index
 from goco.models import CollectRequest
-from goco.runner import Runner
-from goco.storage import DocumentStore
+from goco.controller.runner import Runner
+from goco.models.persistence.storage import DocumentStore
 
 
 def test_aws_collection_paginates_and_preserves_originals(config_file, monkeypatch):
-    from goco.vendors import aws
+    from goco.models.integrations.vendors import aws
 
     data = json.loads(config_file.read_text())
     account = data["accounts"][0]
@@ -58,7 +58,7 @@ def test_aws_collection_paginates_and_preserves_originals(config_file, monkeypat
 def test_aws_sdk_dry_run_lists_billing_month_without_fetching_pdf(monkeypatch):
     boto3 = pytest.importorskip("boto3")
     from botocore.stub import Stubber
-    from goco.vendors import aws
+    from goco.models.integrations.vendors import aws
 
     client = boto3.client("invoicing", region_name="us-east-1",
                           aws_access_key_id="test", aws_secret_access_key="test")
@@ -76,7 +76,7 @@ def test_aws_sdk_dry_run_lists_billing_month_without_fetching_pdf(monkeypatch):
 
 
 def test_aws_refreshes_expired_pdf_url_and_preserves_primary_when_supplement_fails(monkeypatch):
-    from goco.vendors import aws
+    from goco.models.integrations.vendors import aws
 
     account = {"id": "billing", "aws_account_id": "123456789012", "vendor_id": "aws", "owner_id": "test"}
     urls = iter(["expired", "fresh"])
@@ -107,7 +107,7 @@ def test_aws_refreshes_expired_pdf_url_and_preserves_primary_when_supplement_fai
     "https://user@bucket.s3.us-east-1.amazonaws.com/private?token=secret",
 ])
 def test_aws_rejects_unsafe_pdf_urls_without_echoing_them(url):
-    from goco.vendors import aws
+    from goco.models.integrations.vendors import aws
 
     with pytest.raises(aws.CollectionError, match="^aws_invalid_pdf_url$"):
         aws.download_pdf(url, 1000)

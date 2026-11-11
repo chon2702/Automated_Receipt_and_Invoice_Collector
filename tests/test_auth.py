@@ -11,7 +11,7 @@ class Secrets:
 
 
 def test_expired_dry_run_never_refreshes_or_writes():
-    from goco.auth import ensure_credentials, AuthRequired, READONLY
+    from goco.models.integrations.mail.auth import ensure_credentials, AuthRequired, READONLY
     credentials=Credentials('secret',refresh_token='refresh',token_uri='https://oauth2.googleapis.com/token',client_id='client',client_secret='secret',scopes=[READONLY],expiry=datetime(2000,1,1))
     secrets=Secrets(json.loads(credentials.to_json()))
     with pytest.raises(AuthRequired): ensure_credentials({'secret_ref':'mail'},secrets,allow_refresh=False)
@@ -19,7 +19,7 @@ def test_expired_dry_run_never_refreshes_or_writes():
 
 
 def test_refresh_rotation_stays_in_secret_store(monkeypatch):
-    from goco.auth import ensure_credentials, READONLY
+    from goco.models.integrations.mail.auth import ensure_credentials, READONLY
     credentials=Credentials('old',refresh_token='refresh',token_uri='https://oauth2.googleapis.com/token',client_id='client',client_secret='secret',scopes=[READONLY],expiry=datetime(2000,1,1))
     secrets=Secrets(json.loads(credentials.to_json()))
     def refresh(self, request):
@@ -30,7 +30,7 @@ def test_refresh_rotation_stays_in_secret_store(monkeypatch):
 
 
 def test_unavailable_keyring_has_safe_failure():
-    from goco.auth import CredentialStore, AuthRequired
+    from goco.models.integrations.mail.auth import CredentialStore, AuthRequired
     class Broken:
         def get_password(self,*args): raise RuntimeError('sensitive TOKEN')
     with pytest.raises(AuthRequired) as error: CredentialStore(Broken()).get('mail')

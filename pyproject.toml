@@ -14,7 +14,7 @@ aws = ["boto3>=1.43.118,<2"]
 test = ["pytest>=8,<10"]
 
 [project.scripts]
-goco = "goco.cli:entrypoint"
+goco = "goco.view.cli:entrypoint"
 
 [tool.setuptools.packages.find]
 where = ["src"]

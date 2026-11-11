@@ -7,7 +7,7 @@ from urllib.parse import urlsplit
 
 import requests
 
-from ..models import CollectionOutcome, DocumentCandidate, InvoiceMetadata, SourceRef
+from goco.models import CollectionOutcome, DocumentCandidate, InvoiceMetadata, SourceRef
 
 
 class CollectionError(Exception):

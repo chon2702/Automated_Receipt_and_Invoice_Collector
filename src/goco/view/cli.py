@@ -4,10 +4,8 @@ import argparse
 from dataclasses import asdict
 import json
 from pathlib import Path
-import sqlite3
 import sys
 
-from ..auth import AuthRequired
 from ..controller import dispatch
 from ..controller.commands import (
     Collect, DocumentFields, ExportReport, ImportDocument, ListServices, Login,
@@ -142,21 +140,16 @@ def main(argv=None):
     except SystemExit as error:
         return int(error.code)
     try:
-        result = dispatch(args.config, args.build(args))
-        args.render(result.data, args)
-        return result.exit_code
+        command = args.build(args)
     except ValueError as error:
         print(safe_text(error), file=sys.stderr)
         return 2
-    except AuthRequired as error:
-        print(safe_text(error), file=sys.stderr)
-        return 1
-    except (OSError, sqlite3.Error):
-        print('operation_failed: check file access, writer lock, or storage health', file=sys.stderr)
-        return 1
-    except KeyboardInterrupt:
-        print('operation_interrupted', file=sys.stderr)
-        return 1
+    result = dispatch(args.config, command)
+    if result.error is None:
+        args.render(result.data, args)
+    else:
+        print(safe_text(result.error), file=sys.stderr)
+    return result.exit_code
 
 
 def entrypoint():

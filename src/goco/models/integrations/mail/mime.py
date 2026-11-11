@@ -3,8 +3,8 @@ from email.utils import getaddresses
 from email import policy
 from email.parser import BytesParser
 from pathlib import Path
-from ..models import DocumentCandidate,SourceRef,InvoiceMetadata,MAX_BYTES
-from .gmail import decode_data
+from goco.models import DocumentCandidate,SourceRef,InvoiceMetadata,MAX_BYTES
+from goco.models.integrations.mail.gmail import decode_data
 
 
 @dataclass(frozen=True)

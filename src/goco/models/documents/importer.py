@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 import hashlib
-from .models import DocumentCandidate, SourceRef, InvoiceMetadata
-from .validation import metadata_valid
-from .storage import expectation_matches
+from goco.models import DocumentCandidate, SourceRef, InvoiceMetadata
+from goco.models.documents.validation import metadata_valid
+from .validation import expectation_matches
 
 
 @dataclass(frozen=True)

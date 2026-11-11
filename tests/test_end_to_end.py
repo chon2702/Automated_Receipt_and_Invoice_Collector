@@ -6,7 +6,7 @@ from goco.models import CollectRequest
 
 
 def gmail_config(config_file):
-    from goco.config import load_config
+    from goco.models.accounts.config import load_config
     data=json.loads(config_file.read_text())
     data['mailboxes']=[dict(id='mail',address='finance@example.test',oauth_client_file='oauth.json',secret_ref='mail')]
     data['accounts'][0].update(id='a',collection='gmail',mailbox_id='mail')
@@ -25,9 +25,9 @@ class Client:
 
 
 def test_rerun_and_dry_run_no_mutation(config_file):
-    from goco.runner import Runner
-    from goco.storage import DocumentStore
-    from goco.index import Index
+    from goco.controller.runner import Runner
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
     cfg=gmail_config(config_file)
     store=DocumentStore(cfg.storage_root,Index(cfg.state_dir/'index.sqlite3'))
     runner=Runner(cfg,{'mail':Client()},store)
@@ -44,17 +44,17 @@ def test_rerun_and_dry_run_no_mutation(config_file):
 
 
 def test_failed_mailbox_retains_success_and_no_complete_coverage(config_file):
-    from goco.runner import Runner
-    from goco.storage import DocumentStore
-    from goco.index import Index
-    from goco.auth import AuthRequired
+    from goco.controller.runner import Runner
+    from goco.models.persistence.storage import DocumentStore
+    from goco.models.persistence.index import Index
+    from goco.models.integrations.mail.auth import AuthRequired
     cfg=gmail_config(config_file)
     data=json.loads(config_file.read_text())
     data['mailboxes'].append(dict(id='bad',address='bad@example.test',oauth_client_file='oauth2.json',secret_ref='bad'))
     data['accounts'].append(dict(id='b',vendor_id='vendor',owner_id='person1',product='other',collection='gmail',mailbox_id='bad'))
     data['rules'].append(rule('b'))
     config_file.write_text(json.dumps(data))
-    from goco.config import load_config
+    from goco.models.accounts.config import load_config
     cfg=load_config(config_file)
     class Bad:
         def list_messages(self,*args): raise AuthRequired('auth_required')
@@ -66,7 +66,7 @@ def test_failed_mailbox_retains_success_and_no_complete_coverage(config_file):
 
 
 def test_cli_import_verify_status_rebuild(config_file,tmp_path,capsys):
-    from goco.cli import main
+    from goco.view.cli import main
     file=tmp_path/'invoice.pdf';file.write_bytes(b'%PDF-1.7 original')
     base=['--config',str(config_file)]
     assert main(base+['import',str(file),'--account','sample','--type','invoice'])==0

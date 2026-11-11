@@ -7,8 +7,8 @@ import random
 import time
 from urllib.parse import quote
 import requests
-from ..auth import AuthRequired
-from ..models import MAX_BYTES
+from goco.models.integrations.mail.auth import AuthRequired
+from goco.models import MAX_BYTES
 
 
 class TransportError(Exception):

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from .time import utcnow
+from ..time import utcnow
 
 
 DOCUMENT_TYPES = {"invoice", "receipt", "credit_note", "statement", "unknown"}

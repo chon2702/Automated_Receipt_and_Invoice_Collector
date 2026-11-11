@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from .storage import expectation_matches
+from ..documents.validation import expectation_matches
 
 
 def covered(expectation, coverage):

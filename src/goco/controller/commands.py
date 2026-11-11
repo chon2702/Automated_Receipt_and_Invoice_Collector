@@ -6,14 +6,14 @@ from pathlib import Path
 from typing import Protocol
 from zoneinfo import ZoneInfo
 
-from ..expectations import evaluate, select_expectations
-from ..importer import ImportMetadata, import_file
-from ..index import Index
-from ..locking import WriterLock
+from goco.models.reporting.expectations import evaluate, select_expectations
+from goco.models.documents.importer import ImportMetadata, import_file
+from goco.models.persistence.index import Index
+from goco.models.persistence.locking import WriterLock
 from ..models import AppConfig, CollectRequest, InvoiceMetadata, parse_month
-from ..reports import build_report, write_report
-from ..storage import DocumentStore, read_runs
-from ..validation import metadata_valid
+from goco.models.reporting.reports import build_report, write_report
+from goco.models.persistence.storage import DocumentStore, read_runs
+from goco.models.documents.validation import metadata_valid
 
 
 @dataclass(frozen=True)
@@ -35,6 +35,7 @@ class Context:
 class CommandResult:
     data: object = None
     exit_code: int = 0
+    error: str | None = None
 
 
 class Command(Protocol):
@@ -58,7 +59,7 @@ class Login:
     mailbox_id: str
 
     def execute(self, context):
-        from ..auth import CredentialStore, login
+        from goco.models.integrations.mail.auth import CredentialStore, login
 
         mailbox = context.config.mailbox(self.mailbox_id)
         with WriterLock(context.config.state_dir):
@@ -74,7 +75,7 @@ class Collect:
     dry_run: bool
 
     def execute(self, context):
-        from ..runner import Runner
+        from goco.controller.runner import Runner
 
         config = context.config
         parse_month(self.month, config.timezone)

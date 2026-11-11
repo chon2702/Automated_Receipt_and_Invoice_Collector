@@ -4,13 +4,13 @@ from zoneinfo import ZoneInfo
 import sqlite3
 import uuid
 
-from .models import RunSummary, CollectionOutcome, DocumentCandidate, SourceRef, parse_month, utcnow
-from .auth import AuthRequired, make_client
-from .mail.gmail import TransportError
-from .mail.mime import normalize_message
-from .vendors.rules import match_rules
-from .vendors import load_collectors
-from .storage import atomic_json
+from goco.models import RunSummary, CollectionOutcome, DocumentCandidate, SourceRef, parse_month, utcnow
+from goco.models.integrations.mail.auth import AuthRequired, make_client
+from goco.models.integrations.mail.gmail import TransportError
+from goco.models.integrations.mail.mime import normalize_message
+from goco.models.integrations.vendors.rules import match_rules
+from goco.models.integrations.vendors import load_collectors
+from goco.models.persistence.storage import atomic_json
 
 
 class Runner:
@@ -155,7 +155,7 @@ class Runner:
                 if account['collection'] == 'gmail' and account['id'] not in processed:
                     record(account['id'], 'failed', 'interrupted')
                     coverage.append(coverage_record(account, False))
-        from .vendors import aws
+        from goco.models.integrations.vendors import aws
 
         for account in selected:
             if account['collection'] != 'aws':

@@ -35,9 +35,16 @@ An attachment can be saved but still require metadata review. Receipt, invoice, 
 
 ## Architecture
 
-- [`src/goco/view/cli.py`](src/goco/view/cli.py) parses arguments and renders results in text or JSON.
-- [`src/goco/controller/commands.py`](src/goco/controller/commands.py) defines commands such as collect, import, and report. The controller dispatches each command with its application dependencies.
-- [`src/goco/models/`](src/goco/models/) separates account configuration, invoice documents, collection runs, and billing periods. Storage, reporting, Gmail, and AWS services work with these models.
+- [`src/goco/view/`](src/goco/view/) parses CLI arguments and renders text, JSON, and diagnostics.
+- [`src/goco/controller/`](src/goco/controller/) dispatches command objects, supplies their dependencies, and coordinates collection in `runner.py`.
+- [`src/goco/models/accounts/`](src/goco/models/accounts/) loads account and provider configuration.
+- [`src/goco/models/documents/`](src/goco/models/documents/) defines documents, validates their contents, and handles imports.
+- [`src/goco/models/reporting/`](src/goco/models/reporting/) evaluates billing expectations and builds reports.
+- [`src/goco/models/`](src/goco/models/) also holds shared collection and billing period types.
+- [`src/goco/models/persistence/`](src/goco/models/persistence/) handles original files, sidecars, the SQLite index, and writer locking.
+- [`src/goco/models/integrations/`](src/goco/models/integrations/) contains Gmail, AWS, and collector routing.
+
+The installed `goco` command calls the CLI view directly. `python -m goco` calls the same view from `__main__.py`.
 
 ## Guides
 

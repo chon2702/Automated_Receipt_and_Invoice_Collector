@@ -3,7 +3,8 @@ import re
 from datetime import date
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
-from .models import AppConfig, DOCUMENT_TYPES, MAX_BYTES
+from ..documents import DOCUMENT_TYPES, MAX_BYTES
+from .types import AppConfig
 
 
 class ConfigError(ValueError):

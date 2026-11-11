@@ -1,6 +1,6 @@
 from collections import Counter
 from dataclasses import asdict
-from .storage import atomic_json
+from goco.models.persistence.storage import atomic_json
 
 
 def build_report(month, results, runs, documents=()):

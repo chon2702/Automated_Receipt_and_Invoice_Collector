@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 import sqlite3
 import uuid
 
-from .models import RunSummary, CollectionOutcome, SourceRef, parse_month, utcnow
+from .models import RunSummary, CollectionOutcome, DocumentCandidate, SourceRef, parse_month, utcnow
 from .auth import AuthRequired, make_client
 from .mail.gmail import TransportError
 from .mail.mime import normalize_message
@@ -155,6 +155,33 @@ class Runner:
                 if account['collection'] == 'gmail' and account['id'] not in processed:
                     record(account['id'], 'failed', 'interrupted')
                     coverage.append(coverage_record(account, False))
+        from .vendors import aws
+
+        for account in selected:
+            if account['collection'] != 'aws':
+                continue
+            account_id = account['id']
+            if interrupted:
+                record(account_id, 'failed', 'interrupted')
+                continue
+            try:
+                for item in aws.collect(account, request.month, request.dry_run, self.config.max_bytes):
+                    if isinstance(item, DocumentCandidate):
+                        try:
+                            item = self.store.ingest(item)
+                        except ValueError:
+                            record(account_id, 'review_required', 'invalid_document', source_ref=item.source)
+                            continue
+                    outcomes.append(asdict(item))
+            except aws.CollectionError as error:
+                record(account_id, error.outcome, error.reason)
+            except (KeyError, TypeError, ValueError):
+                record(account_id, 'failed', 'aws_invalid_response')
+            except (OSError, sqlite3.Error):
+                record(account_id, 'failed', 'collection_failed')
+            except KeyboardInterrupt:
+                interrupted = True
+                record(account_id, 'failed', 'interrupted')
         summary = RunSummary(str(uuid.uuid4()), started, utcnow(), outcomes, coverage, interrupted)
         if not request.dry_run:
             run_path = self.store.root / 'runs' / (summary.run_id + '.json')

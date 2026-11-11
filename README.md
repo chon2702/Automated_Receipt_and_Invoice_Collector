@@ -33,9 +33,16 @@ python -m venv .venv
 
 An attachment can be saved but still require metadata review. Receipt, invoice, statement and email source are distinct records. Receiving an email in October does not establish an October invoice service period.
 
+## Architecture
+
+- [`src/goco/view/cli.py`](src/goco/view/cli.py) parses arguments and renders results in text or JSON.
+- [`src/goco/controller/commands.py`](src/goco/controller/commands.py) defines commands such as collect, import, and report. The controller dispatches each command with its application dependencies.
+- [`src/goco/models/`](src/goco/models/) separates account configuration, invoice documents, collection runs, and billing periods. Storage, reporting, Gmail, and AWS services work with these models.
+
 ## Guides
 
 - [Setup and operations](docs/operations.md)
+- [AWS invoice collection](docs/aws-collection.md)
 - [Company pilot checklist](docs/pilot-checklist.md)
 - [Implementation specification](docs/superpowers/specs/2026-11-05-goco-mvp-design.md)
 - [Implementation plan](docs/superpowers/plans/2026-11-05-goco-mvp.md)
@@ -43,4 +50,4 @@ An attachment can be saved but still require metadata review. Receipt, invoice, 
 - [Vendor research](docs/vendor-feasibility.md)
 - [Original project brief](docs/project-brief.txt)
 
-AWS API collection is the next release. Browser automation, automatic email-link downloads, OCR, scheduling and direct Drive/SharePoint uploads are outside this release. The tool does not send email, modify Gmail messages or configure shared-folder permissions.
+Browser automation, automatic email-link downloads, OCR, scheduling and direct Drive/SharePoint uploads are outside this release. The tool does not send email, modify Gmail messages or configure shared-folder permissions.

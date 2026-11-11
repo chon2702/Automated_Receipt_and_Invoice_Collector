@@ -28,4 +28,4 @@ Implementation verification uses synthetic data and simulated Gmail transport. N
 
 ## Next release
 
-- [ ] AWS API feasibility refreshed against actual account/role; separate implementation plan and real invoice test.
+- [ ] Run the AWS collector with the company billing profile and compare original PDFs with the AWS console. See [AWS collection](aws-collection.md).

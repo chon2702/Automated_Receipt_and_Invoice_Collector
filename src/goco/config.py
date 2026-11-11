@@ -77,7 +77,7 @@ def load_config(path: Path) -> AppConfig:
     shapes = {
       'owners': (['id', 'display_name'], []),
       'mailboxes': (['id', 'address', 'oauth_client_file', 'secret_ref'], []),
-      'accounts': (['id','vendor_id','product','owner_id','collection'], ['mailbox_id','external_account_label','card_folder_label','active_from','active_until']),
+      'accounts': (['id','vendor_id','product','owner_id','collection'], ['mailbox_id','external_account_label','card_folder_label','active_from','active_until','aws_profile','aws_account_id']),
       'rules': (['id','account_id','sender_addresses','attachment_extensions','document_type','enabled'], ['subject_contains','recipient_addresses']),
       'expectations': (['id','account_id','required_type','period_start','period_end','due_date','grace_days','minimum_count'], ['discovery_start','discovery_end']),
     }
@@ -114,8 +114,15 @@ def load_config(path: Path) -> AppConfig:
             if group == 'accounts':
                 slug(row['vendor_id'], where + '.vendor_id')
                 _text(row['product'], where + '.product')
-                if row['collection'] not in ('gmail','manual'):
-                    _fail(where + '.collection', 'must be gmail or manual')
+                if row['collection'] not in ('gmail', 'manual', 'aws'):
+                    _fail(where + '.collection', 'must be gmail, manual, or aws')
+                if row['collection'] == 'aws':
+                    _text(row.get('aws_profile'), where + '.aws_profile')
+                    aws_id = row.get('aws_account_id')
+                    if not isinstance(aws_id, str) or not re.fullmatch(r'[0-9]{12}', aws_id):
+                        _fail(where + '.aws_account_id', 'expected a 12-digit AWS account ID')
+                elif 'aws_profile' in row or 'aws_account_id' in row:
+                    _fail(where, 'AWS settings require aws collection')
                 for key in ('active_from','active_until'):
                     if key in row: _date(row[key], where + '.' + key)
                 if row.get('active_from', '0001-01-01') > row.get('active_until', '9999-12-31'):

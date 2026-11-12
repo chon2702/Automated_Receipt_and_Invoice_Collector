@@ -4,7 +4,7 @@ import json
 import pytest
 from test_storage import candidate
 from test_expectations import obligation
-from test_end_to_end import gmail_config, Client
+from test_end_to_end import gmail_config, link_notice_config, Client
 from test_mime import message,rule
 from goco.models import CollectRequest,InvoiceMetadata,parse_month
 
@@ -75,7 +75,7 @@ def test_link_only_and_disabled_rules_visible(config_file):
     from goco.controller.runner import Runner
     from goco.models.persistence.storage import DocumentStore
     from goco.models.persistence.index import Index
-    cfg=gmail_config(config_file)
+    cfg=link_notice_config(config_file)
     class Link(Client):
         def get_message(self,*args,**kwargs):
             raw=message();raw['payload'].pop('parts');return raw

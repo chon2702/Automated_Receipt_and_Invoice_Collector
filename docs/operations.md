@@ -12,9 +12,9 @@ The environment in the project directory has been installed. `requirements-lock.
 
 Copy `config/example.json` to `private/config.json`. Its paths are relative to the file: for example `storage_root: "documents"` and `state_dir: "state"` inside `private` are separate siblings. No state or shared-storage paths may overlap. Production configuration, credentials and invoice samples must stay out of version control.
 
-Each account needs stable IDs, an explicit owner, vendor, product and collection method. Card-folder labels from the inventory are labels, not verified owner identities. Separate Google Workspace, Google Ads, Cloud/Gemini and Microsoft/LinkedIn billing products according to actual billing accounts. Keep annual subscriptions annual. Begin with manual accounts, then enable Gmail only for reviewed sender/account rules.
+Each account needs stable IDs, an explicit owner, vendor, product and collection method. Card-folder labels from the inventory are labels, not verified owner identities. Separate Google Workspace, Google Ads, Cloud/Gemini and Microsoft/LinkedIn billing products according to actual billing accounts. Keep annual subscriptions annual. Begin with manual accounts, then enable Gmail accounts once their product name and search aliases have been checked against a dry run.
 
-All root fields are required except timezone (`Europe/Berlin`) and `max_bytes` (maximum 26214400). Entity IDs are lowercase slugs, maximum 64 characters. Unknown fields are rejected. Refer to the specification for exact fields; the application gives a field path for invalid configuration.
+All root fields are required except timezone (`Europe/Berlin`), `max_bytes` (maximum 26214400) and `account_defaults`. `account_defaults` can supply `owner_id`, `collection` and `mailbox_id` for every account. Values written in an account win, and the default mailbox applies only to accounts whose resolved collection is `gmail`. Accounts are validated after the defaults are filled in. For the compact per-manager template, see [Gmail test for the VA and VL managers](manager-gmail-setup.md). Entity IDs are lowercase slugs, maximum 64 characters. Unknown fields are rejected. Refer to the specification for exact fields; the application gives a field path for invalid configuration.
 
 A synthetic Gmail configuration fragment (add these entries to the existing arrays):
 
@@ -32,22 +32,13 @@ A synthetic Gmail configuration fragment (add these entries to the existing arra
     "product": "Example subscription",
     "owner_id": "person1",
     "collection": "gmail",
-    "mailbox_id": "billing-mail"
-  }],
-  "rules": [{
-    "id": "example-invoice",
-    "account_id": "example-subscription",
-    "sender_addresses": ["billing@vendor.example.test"],
-    "recipient_addresses": ["billing@example.test"],
-    "subject_contains": "Invoice",
-    "attachment_extensions": [".pdf", ".xml"],
-    "document_type": "invoice",
-    "enabled": true
+    "mailbox_id": "billing-mail",
+    "search_aliases": ["Example Vendor"]
   }]
 }
 ```
 
-This is a fragment, not a complete config and not a verified vendor rule. Replace addresses only after examining private original messages. Configure all accounts that can receive a shared sender so account ambiguity can be detected, even when selecting just one account. Sender checks route messages; they do not prove authenticity.
+This is a fragment, not a complete config. Gmail accounts find invoice PDFs by `product` and `search_aliases`; see [Gmail PDF search by vendor name](gmail-pdf-search.md) for matching, review cases and the migration of old sender rules. Configure all vendors of a mailbox so vendor ambiguity can be detected, even when selecting just one account. Names route PDFs; they do not prove authenticity. Rules remain only for portal link notifications and need `"purpose": "link_notice"`.
 
 ## Company Gmail authorization
 
@@ -82,13 +73,13 @@ goco --config private/config.json import C:\Invoices\invoice.pdf --account examp
 
 Exactly one collect selector is required (`--all`, `--service`, `--owner`, `--account`). Selected month is message receipt time in the configured timezone. November-issued invoices for October service may arrive in November; scan both months when applicable. Reruns rescan and deduplicate.
 
-Dry run retrieves message metadata only. It shows potential message-level matches; attachment filenames/counts and document content are unknown until actual retrieval. It does not create data/state, refresh tokens or save run reports. If the access token is expired, log in outside dry run first.
+For link-notice rules, dry run retrieves message metadata only and shows potential message-level matches. For name-searched accounts it also reads message structure and text and reports the per-PDF decision; attachment contents are never downloaded. It does not create data/state, refresh tokens or save run reports. If the access token is expired, log in outside dry run first.
 
 PDF/XML originals are preserved unchanged. File content has basic type/security checks, not full invoice authenticity or accounting validation. Maximum file size is 25 MiB and can be lowered by configuration. `.eml` can be manually preserved only with `--type unknown`; the message does not become an invoice or automatically extract its attachments. Import an actual attachment separately when needed.
 
 ## Review and obligations
 
-Collection outcomes: `saved`, `duplicate`, `review_required`, `manual_required`, `auth_required`, `failed`. A Gmail attachment normally requires metadata review because the app does not guess invoice dates, service periods or amounts. `status --format json` and text status list document IDs and relative paths.
+Collection outcomes: `saved`, `duplicate`, `review_required`, `manual_required`, `skipped`, `auth_required`, `failed`. Text output starts with one line per selected account (saved, duplicates, review cases, skipped) and separates `ok, no matches` from a failed retrieval. A Gmail attachment normally requires metadata review because the app does not guess invoice dates, service periods or amounts. `status --format json` and text status list document IDs and relative paths.
 
 ```powershell
 goco --config private/config.json document verify --id DOCUMENT-UUID --type invoice --period-start 2026-10-01 --period-end 2026-10-31 --reviewed-by Accounting

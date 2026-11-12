@@ -46,3 +46,14 @@ def test_three_attempts_and_capped_retry_after():
     with pytest.raises(TransportError) as error: GmailClient('secret','finance@example.test',session=session,sleep=delays.append)
     assert len(session.calls)==3 and max(delays)<=60
     assert 'secret' not in str(error.value)
+
+
+def test_gmail_retries_403_user_rate_limit():
+    from goco.models.integrations.mail.gmail import GmailClient
+
+    limited = Response({'error': {'errors': [{'reason': 'userRateLimitExceeded'}]}}, 403)
+    session = Session([Response({'emailAddress': 'finance@example.test'}), limited, Response({'messages': []})])
+    delays = []
+    client = GmailClient('secret', 'finance@example.test', session=session, sleep=delays.append)
+    assert client.list_messages('after:1') == {'messages': []}
+    assert len(delays) == 1

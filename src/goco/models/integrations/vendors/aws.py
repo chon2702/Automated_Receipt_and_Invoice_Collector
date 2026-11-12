@@ -10,11 +10,7 @@ import requests
 from goco.models import CollectionOutcome, DocumentCandidate, InvoiceMetadata, SourceRef
 
 
-class CollectionError(Exception):
-    def __init__(self, reason, outcome="failed"):
-        super().__init__(reason)
-        self.reason = reason
-        self.outcome = outcome
+from .errors import CollectionError
 
 
 class DownloadForbidden(CollectionError):

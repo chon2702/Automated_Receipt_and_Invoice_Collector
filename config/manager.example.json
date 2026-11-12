@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "storage_root": "manager/documents",
+  "state_dir": "manager/state",
+  "owners": [
+    {"id": "manager", "display_name": "MANAGER_NAME"}
+  ],
+  "mailboxes": [
+    {
+      "id": "manager-gmail",
+      "address": "manager@example.test",
+      "oauth_client_file": "oauth-client.json",
+      "secret_ref": "goco-manager-gmail"
+    }
+  ],
+  "account_defaults": {"owner_id": "manager", "collection": "gmail", "mailbox_id": "manager-gmail"},
+  "accounts": [
+    {"id": "anthropic-claude", "vendor_id": "anthropic", "product": "Claude", "search_aliases": ["Anthropic"]},
+    {"id": "aws", "vendor_id": "aws", "product": "AWS", "search_aliases": ["Amazon Web Services"]},
+    {"id": "atlassian", "vendor_id": "atlassian", "product": "Atlassian"},
+    {"id": "calendly", "vendor_id": "calendly", "product": "Calendly"},
+    {"id": "elevenlabs", "vendor_id": "elevenlabs", "product": "ElevenLabs"},
+    {"id": "github", "vendor_id": "github", "product": "GitHub"},
+    {"id": "hubspot", "vendor_id": "hubspot", "product": "HubSpot"},
+    {"id": "joan-visionect", "vendor_id": "visionect", "product": "Joan / Visionect", "search_aliases": ["Visionect"]},
+    {"id": "leadinfo", "vendor_id": "leadinfo", "product": "Leadinfo"},
+    {"id": "linkedin-ads", "vendor_id": "linkedin", "product": "LinkedIn Ads", "search_aliases": ["LinkedIn"]},
+    {"id": "make-celonis", "vendor_id": "make", "product": "Make / Celonis", "search_aliases": ["Make.com", "Celonis"]},
+    {"id": "microsoft-365", "vendor_id": "microsoft", "product": "Microsoft 365", "search_aliases": ["Microsoft"]},
+    {"id": "motion", "vendor_id": "motion", "product": "Motion"},
+    {"id": "netcup", "vendor_id": "netcup", "product": "netcup"},
+    {"id": "prm-parking", "vendor_id": "prm", "product": "ParkRaum-Management PRM", "search_aliases": ["ParkRaum-Management"]},
+    {"id": "plaud", "vendor_id": "plaud", "product": "PLAUD"},
+    {"id": "rapidmail", "vendor_id": "rapidmail", "product": "rapidmail"},
+    {"id": "sonarcloud", "vendor_id": "sonar", "product": "SonarCloud", "search_aliases": ["SonarSource"]},
+    {"id": "t3n", "vendor_id": "t3n", "product": "t3n"},
+    {"id": "voiceflow", "vendor_id": "voiceflow", "product": "Voiceflow"},
+    {"id": "webflow", "vendor_id": "webflow", "product": "Webflow"}
+  ],
+  "rules": [],
+  "expectations": []
+}

@@ -27,11 +27,26 @@ def _render_json(data, args):
     print(json.dumps(data, ensure_ascii=True))
 
 
+ACCOUNT_STATUS = {
+    'completed': 'ok', 'no_matches': 'ok, no matches',
+    'failed': 'FAILED', 'auth_required': 'LOGIN REQUIRED',
+}
+
+
 def _render_collection(summary, args):
     if args.format == 'json':
-        _render_json({**asdict(summary), 'counts': summary.counts}, args)
+        _render_json({**asdict(summary), 'counts': summary.counts, 'accounts': summary.account_results}, args)
         return
     print('Collection: ' + json.dumps(summary.counts))
+    for row in summary.account_results:
+        status = ACCOUNT_STATUS[row['status']] + (f" ({row['reason']})" if row['reason'] else '')
+        counts = (f"saved={row['saved']} (metadata review {row['metadata_review']}) duplicate={row['duplicate']} "
+                  f"review={row['review']} skipped={row['skipped']}")
+        if row['manual']:
+            counts += f" manual={row['manual']}"
+        print(safe_text(f"{row['account_id']} | {status} | {counts}"))
+    if summary.outcomes:
+        print('Details:')
     for item in summary.outcomes:
         print(safe_text(f"{item['account_id']} | {item['outcome']} | {item['reason']} | review={item.get('review_id') or '-'}"))
 
@@ -70,7 +85,7 @@ def _document_fields(args):
 
 
 def _parser():
-    parser = argparse.ArgumentParser(prog='goco', description='Collect original invoices from Gmail, AWS, or manual files.')
+    parser = argparse.ArgumentParser(prog='goco', description='Collect original invoices from Gmail, AWS, Azure, Google Ads, or manual files.')
     parser.add_argument('--config', required=True, help='Path to company configuration JSON')
     sub = parser.add_subparsers(dest='command', required=True)
     config = sub.add_parser('config').add_subparsers(dest='action', required=True)

@@ -15,6 +15,24 @@ class TransportError(Exception):
     pass
 
 
+def _forbidden_code(response):
+    body = bytearray()
+    for chunk in response.iter_content(4096):
+        body.extend(chunk)
+        if len(body) > 16 * 1024:
+            return 'gmail_access_denied'
+    try:
+        errors = json.loads(body).get('error', {}).get('errors', [])
+        reasons = {item.get('reason') for item in errors if isinstance(item, dict)}
+    except (AttributeError, TypeError, ValueError):
+        return 'gmail_access_denied'
+    if 'dailyLimitExceeded' in reasons:
+        return 'gmail_daily_limit_exceeded'
+    if reasons.intersection({'rateLimitExceeded', 'userRateLimitExceeded'}):
+        return 'gmail_rate_limit_exceeded'
+    return 'gmail_access_denied'
+
+
 def decode_data(data,maximum=MAX_BYTES):
     if not isinstance(data,str) or len(data)>(maximum+2)//3*4+4: raise ValueError('invalid_attachment_data')
     try:
@@ -38,8 +56,10 @@ class GmailClient:
                     params=params or {},headers={'Authorization':'Bearer '+self.token},timeout=(10,30),stream=True,allow_redirects=False)
                 status=response.status_code
                 if status==401: raise AuthRequired('login_required')
-                if status==429 or 500<=status<=599:
-                    if attempt==2: raise TransportError('gmail_retry_exhausted')
+                forbidden = _forbidden_code(response) if status == 403 else None
+                if status == 429 or 500 <= status <= 599 or forbidden == 'gmail_rate_limit_exceeded':
+                    if attempt == 2:
+                        raise TransportError(forbidden or 'gmail_retry_exhausted')
                     retry=response.headers.get('Retry-After','')
                     try: delay=float(retry)
                     except ValueError:
@@ -47,7 +67,8 @@ class GmailClient:
                         except (ValueError,TypeError,OverflowError): delay=2**attempt+random.random()
                     self.sleep(max(0,min(60,delay)))
                     continue
-                if status!=200: raise TransportError('gmail_access_denied' if status==403 else 'gmail_request_failed')
+                if status != 200:
+                    raise TransportError(forbidden or 'gmail_request_failed')
                 content=bytearray()
                 for chunk in response.iter_content(65536):
                     content.extend(chunk)

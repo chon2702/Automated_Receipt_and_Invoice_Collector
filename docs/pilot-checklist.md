@@ -7,7 +7,7 @@ Implementation verification uses synthetic data and simulated Gmail transport. N
 - [ ] Company-approved Google Cloud project/Desktop OAuth client and authorized Gmail user.
 - [ ] Confirmed billing account/product/owner mapping; folder labels VA/VL alone are insufficient.
 - [ ] Private sample original messages for two or three vendors with reported attached PDFs.
-- [ ] Exact sender, recipient, subject and attachment rules verified against samples; shared-sender ambiguity evaluated.
+- [ ] Vendor product names and search aliases checked with a dry run against samples; vendor ambiguity evaluated. Link-notice rules verified separately.
 - [ ] Approved shared destination, single writer workstation, authorized accounting reader and backup owner.
 - [ ] Explicit due dates/service periods and optional verified delivery windows; annual subscriptions remain annual.
 

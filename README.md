@@ -25,11 +25,12 @@ python -m venv .venv
 
 ## What works
 
-- Strict JSON configuration with owners, billing accounts, mailbox references, sender rules and explicit invoice obligations.
+- Strict JSON configuration with owners, billing accounts, mailbox references, vendor search names and explicit invoice obligations.
 - Original-file import, SHA-256 duplicate detection, preserved corrected versions and metadata review history.
 - Read-only Gmail OAuth with Windows credential storage, pagination, nested MIME attachments and account ambiguity handling.
+- Gmail invoice PDFs found by vendor product name and aliases, decided per PDF (invoice, receipt, credit note) with review for ambiguous cases.
 - Text/JSON status, portable reports, interrupted-run records and SQLite index rebuild from original files/sidecars.
-- Dry-run Gmail discovery without attachment-body downloads, writes or token refresh.
+- Dry-run Gmail discovery without attachment downloads, writes or token refresh.
 
 An attachment can be saved but still require metadata review. Receipt, invoice, statement and email source are distinct records. Receiving an email in October does not establish an October invoice service period.
 
@@ -42,14 +43,18 @@ An attachment can be saved but still require metadata review. Receipt, invoice, 
 - [`src/goco/models/reporting/`](src/goco/models/reporting/) evaluates billing expectations and builds reports.
 - [`src/goco/models/`](src/goco/models/) also holds shared collection and billing period types.
 - [`src/goco/models/persistence/`](src/goco/models/persistence/) handles original files, sidecars, the SQLite index, and writer locking.
-- [`src/goco/models/integrations/`](src/goco/models/integrations/) contains Gmail, AWS, and collector routing.
+- [`src/goco/models/integrations/`](src/goco/models/integrations/) contains Gmail, AWS, Azure, Google Ads, and collector routing.
 
 The installed `goco` command calls the CLI view directly. `python -m goco` calls the same view from `__main__.py`.
 
 ## Guides
 
 - [Setup and operations](docs/operations.md)
+- [Gmail PDF search by vendor name](docs/gmail-pdf-search.md)
+- [Gmail test for the VA and VL managers](docs/manager-gmail-setup.md)
 - [AWS invoice collection](docs/aws-collection.md)
+- [Azure invoice collection](docs/azure-collection.md)
+- [Google Ads invoice collection](docs/google-ads-collection.md)
 - [Company pilot checklist](docs/pilot-checklist.md)
 - [Implementation specification](docs/superpowers/specs/2026-11-05-goco-mvp-design.md)
 - [Implementation plan](docs/superpowers/plans/2026-11-05-goco-mvp.md)

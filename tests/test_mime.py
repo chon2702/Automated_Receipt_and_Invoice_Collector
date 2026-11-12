@@ -3,11 +3,11 @@ import pytest
 
 
 def message(data=b'%PDF-1.7 example',accounts_subject='Invoice',received=1790805600000):
-    return {'id':'m1','internalDate':str(received),'payload':{'mimeType':'multipart/mixed','headers':[{'name':'From','value':'Billing <billing@example.test>'},{'name':'To','value':'finance@example.test'},{'name':'Subject','value':accounts_subject}], 'parts':[{'mimeType':'multipart/mixed','parts':[{'filename':'../../invoice.pdf','mimeType':'application/pdf','body':{'data':base64.urlsafe_b64encode(data).decode(),'size':len(data)},'partId':'2.1'}]}]}}
+    return {'id':'m1','internalDate':str(received),'payload':{'mimeType':'multipart/mixed','headers':[{'name':'From','value':'Example Vendor Billing <billing@example.test>'},{'name':'To','value':'finance@example.test'},{'name':'Subject','value':accounts_subject}], 'parts':[{'mimeType':'multipart/mixed','parts':[{'filename':'../../invoice.pdf','mimeType':'application/pdf','body':{'data':base64.urlsafe_b64encode(data).decode(),'size':len(data)},'partId':'2.1'}]}]}}
 
 
 def rule(account='a'):
-    return dict(id='rule-'+account,account_id=account,sender_addresses=['billing@example.test'],recipient_addresses=['finance@example.test'],attachment_extensions=['.pdf'],document_type='invoice',enabled=True)
+    return dict(id='rule-'+account,account_id=account,purpose='link_notice',sender_addresses=['billing@example.test'],recipient_addresses=['finance@example.test'],attachment_extensions=['.pdf'],document_type='invoice',enabled=True)
 
 
 def test_nested_mime_preserves_original_and_unknown_metadata():
@@ -37,3 +37,22 @@ def test_bad_base64_and_oversize_rejected_before_fetch():
     raw=message();body=raw['payload']['parts'][0]['parts'][0]['body'];body.pop('data');body.update(size=999999999,attachmentId='large')
     msg=normalize_message(raw)
     with pytest.raises(ValueError): extract_candidates(msg,match_rules(msg,[rule()]),lambda *_:pytest.fail('oversize must not fetch'),{'a':{'id':'a','vendor_id':'vendor','owner_id':'person1'}},'mail')
+
+def test_one_message_can_contain_an_invoice_and_a_receipt():
+    from goco.models.integrations.mail.mime import normalize_message, extract_candidates
+    from goco.models.integrations.vendors.rules import match_rules
+
+    raw = message()
+    attachment = raw['payload']['parts'][0]['parts'][0]
+    raw['payload']['parts'] = [
+        dict(attachment, filename=name, partId=str(index))
+        for index, name in enumerate(['INVOICE-123.pdf', 'Receipt-456.pdf', 'Terms.pdf'])
+    ]
+    msg = normalize_message(raw)
+    rules = [
+        dict(rule(), id='invoice', attachment_filename_prefix='Invoice-'),
+        dict(rule(), id='receipt', attachment_filename_prefix='Receipt-', document_type='receipt'),
+    ]
+    accounts = {'a': {'id': 'a', 'vendor_id': 'vendor', 'owner_id': 'person1'}}
+    candidates = extract_candidates(msg, match_rules(msg, rules), lambda *_: b'', accounts, 'mail')
+    assert [candidate.document_type for candidate in candidates] == ['invoice', 'receipt']

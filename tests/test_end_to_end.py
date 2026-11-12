@@ -6,10 +6,21 @@ from goco.models import CollectRequest
 
 
 def gmail_config(config_file):
+    """Account 'a' finds PDF attachments by its product name, without rules."""
     from goco.models.accounts.config import load_config
     data=json.loads(config_file.read_text())
     data['mailboxes']=[dict(id='mail',address='finance@example.test',oauth_client_file='oauth.json',secret_ref='mail')]
-    data['accounts'][0].update(id='a',collection='gmail',mailbox_id='mail')
+    data['accounts'][0].update(id='a',product='Example Vendor',collection='gmail',mailbox_id='mail')
+    data['rules']=[]
+    config_file.write_text(json.dumps(data))
+    return load_config(config_file)
+
+
+def link_notice_config(config_file):
+    """Account 'a' keeps an explicit link-notice rule, like the Google Ads notification path."""
+    from goco.models.accounts.config import load_config
+    gmail_config(config_file)
+    data=json.loads(config_file.read_text())
     data['rules']=[rule()]
     config_file.write_text(json.dumps(data))
     return load_config(config_file)
@@ -30,7 +41,12 @@ def test_rerun_and_dry_run_no_mutation(config_file):
     from goco.models.persistence.index import Index
     cfg=gmail_config(config_file)
     store=DocumentStore(cfg.storage_root,Index(cfg.state_dir/'index.sqlite3'))
-    runner=Runner(cfg,{'mail':Client()},store)
+    class FilteredClient(Client):
+        def list_messages(self, query, page_token=None):
+            assert 'has:attachment filename:pdf' in query and '"Example Vendor"' in query
+            return super().list_messages(query, page_token)
+
+    runner=Runner(cfg,{'mail':FilteredClient()},store)
     dry=runner.collect(CollectRequest('2026-10',('a',),True))
     assert not cfg.storage_root.exists() and not cfg.state_dir.exists()
     first=runner.collect(CollectRequest('2026-10',('a',)))
@@ -52,7 +68,6 @@ def test_failed_mailbox_retains_success_and_no_complete_coverage(config_file):
     data=json.loads(config_file.read_text())
     data['mailboxes'].append(dict(id='bad',address='bad@example.test',oauth_client_file='oauth2.json',secret_ref='bad'))
     data['accounts'].append(dict(id='b',vendor_id='vendor',owner_id='person1',product='other',collection='gmail',mailbox_id='bad'))
-    data['rules'].append(rule('b'))
     config_file.write_text(json.dumps(data))
     from goco.models.accounts.config import load_config
     cfg=load_config(config_file)

@@ -10,6 +10,7 @@ data/
 state/
 config/*.json
 !config/example.json
+!config/manager.example.json
 credentials*.json
 token*.json
 /docs/company-context.md

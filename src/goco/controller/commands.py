@@ -158,8 +158,9 @@ def _report(context, month):
     parse_month(month, config.timezone)
     runs = read_runs(config.storage_root)
     documents = context.store.documents()
-    aws_accounts = {account['id'] for account in config.accounts if account['collection'] == 'aws'}
-    coverage = [item for run in runs for item in run['coverage'] if item['account_id'] not in aws_accounts]
+    api_accounts = {account['id'] for account in config.accounts
+                    if account['collection'] in ('aws', 'azure', 'google_ads')}
+    coverage = [item for run in runs for item in run['coverage'] if item['account_id'] not in api_accounts]
     obligations = evaluate(
         select_expectations(config.expectations, month), documents,
         datetime.now(ZoneInfo(config.timezone)).date(), coverage,

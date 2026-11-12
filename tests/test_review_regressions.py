@@ -2,17 +2,17 @@ from datetime import datetime,timezone,date
 import json
 import sqlite3
 import pytest
-from test_end_to_end import gmail_config,Client
+from test_end_to_end import gmail_config,link_notice_config,Client
 from test_mime import message
 from test_expectations import obligation
 from goco.models import CollectRequest
 
 
-def setup(config_file):
+def setup(config_file,configure=gmail_config):
     from goco.controller.runner import Runner
     from goco.models.persistence.storage import DocumentStore
     from goco.models.persistence.index import Index
-    cfg=gmail_config(config_file)
+    cfg=configure(config_file)
     store=DocumentStore(cfg.storage_root,Index(cfg.state_dir/'index.sqlite3'))
     return cfg,store
 
@@ -49,7 +49,7 @@ def test_disabling_rules_supersedes_prior_success(config_file):
     from goco.models.persistence.storage import read_runs
     from goco.models.accounts.config import load_config
     from goco.models.reporting.expectations import covered
-    cfg,store=setup(config_file)
+    cfg,store=setup(config_file,link_notice_config)
     class Empty(Client):
         def list_messages(self,*args): return {}
     first=Runner(cfg,{'mail':Empty()},store).collect(CollectRequest('2026-10',('a',)))
@@ -64,7 +64,7 @@ def test_disabling_rules_supersedes_prior_success(config_file):
 
 def test_link_only_review_retains_private_source_and_safe_identifier(config_file):
     from goco.controller.runner import Runner
-    cfg,store=setup(config_file)
+    cfg,store=setup(config_file,link_notice_config)
     class Link(Client):
         def get_message(self,*args,**kwargs):
             raw=message();raw['id']='private-message-id';raw['payload'].pop('parts');return raw
